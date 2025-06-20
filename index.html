@@ -401,7 +401,10 @@
                 ];
 
                 const payload = { contents: messagesForLLM }; // Enviar el contexto y la pregunta actual
-                const apiKey = ""; // La API key será proporcionada por el entorno de Canvas
+                // *** IMPORTANTE: Cuando publiques esta página, reemplaza la cadena vacía con tu propia API Key de Gemini. ***
+                // Puedes obtener una API Key en Google AI Studio: https://aistudio.google.com/app/apikey
+                const apiKey = "AIzaSyCnKGtqmnE6hZNgfdBprQUoZDw-1EVcBSM"; // Tu API Key ha sido insertada aquí.
+
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
