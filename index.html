@@ -1,8 +1,708 @@
 <!DOCTYPE html>
-<!-- El contenido HTML que el usuario proporcionó va aquí -->
-<!-- Por simplicidad, vamos a insertar un marcador porque el contenido es muy largo -->
-<!-- En la práctica, se insertaría el contenido completo proporcionado por el usuario -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crédito Semanal Matehuala - Fincapital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        // La integración con Firebase Firestore ha sido eliminada ya que el objetivo es enviar por WhatsApp.
 
-<!-- Debido a la longitud del código, aquí iría el HTML completo que me compartiste. -->
+        // Preguntas Frecuentes para el Asesor Virtual
+        const faqs = [
+            {
+                question: "¿Qué papeles necesito para pedir el préstamo?",
+                answer: "Necesitas INE vigente, comprobante de domicilio reciente y un aval no familiar que viva en otro domicilio."
+            },
+            {
+                question: "¿Qué documentos me van a pedir?",
+                answer: "Te van a pedir INE del cliente y del aval, comprobante de domicilio, y datos del negocio."
+            },
+            {
+                question: "¿Con mi INE es suficiente?",
+                answer: "No, también necesitas comprobante de domicilio y aval."
+            },
+            {
+                question: "¿Necesito comprobante de domicilio?",
+                answer: "Sí, es obligatorio y debe ser reciente."
+            },
+            {
+                question: "¿Mi aval tiene que firmar?",
+                answer: "Sí, debe firmar el contrato y no puede ser familiar."
+            },
+            {
+                question: "¿Aceptan como aval a un familiar?",
+                answer: "No, debe ser alguien sin parentesco y que viva en otra dirección."
+            },
+            {
+                question: "¿Qué pasa si no tengo aval?",
+                answer: "No se puede otorgar el crédito sin un aval válido."
+            },
+            {
+                question: "¿Puedo dar a mi esposo(a) como aval?",
+                answer: "No, el aval no puede ser familiar ni vivir en la misma dirección."
+            },
+            {
+                question: "¿Tiene que vivir en otro lado el aval?",
+                answer: "Sí, debe tener domicilio diferente al tuyo y al del negocio."
+            },
+            {
+                question: "¿Puede ser alguien de mi familia el aval?",
+                answer: "No, se requiere que no tenga parentesco contigo."
+            },
+            {
+                question: "¿Cuánto me prestan?",
+                answer: "Entre $5,000 y $10,000 pesos, dependiendo del giro de tu negocio."
+            },
+            {
+                question: "¿Cuál es el mínimo que prestan?",
+                answer: "El monto mínimo es de $5,000 pesos."
+            },
+            {
+                question: "¿Cuál es el máximo que puedo pedir?",
+                answer: "El monto máximo es de $10,000 pesos para negocios de comida o abarrotes."
+            },
+            {
+                question: "¿Prestan más de 10 mil?",
+                answer: "No, actualmente el límite es de $10,000 pesos."
+            },
+            {
+                question: "¿Solo prestan a negocios?",
+                answer: "Sí, únicamente a negocios con local fijo."
+            },
+            {
+                question: "¿Mi negocio es pequeño, sí me prestan?",
+                answer: "Sí, siempre y cuando esté funcionando y tenga mercancía visible."
+            },
+            {
+                question: "¿Cuánto puedo pedir si es la primera vez?",
+                answer: "Normalmente entre $5,000 y $7,000 pesos."
+            },
+            {
+                question: "¿Puedo ir subiendo el monto con el tiempo?",
+                answer: "Sí, si tu comportamiento de pago es bueno."
+            },
+            {
+                question: "¿Tienen préstamos personales?",
+                answer: "No, solo préstamos para negocios."
+            },
+            {
+                question: "¿Puedo pedir para poner un negocio?",
+                answer: "No, el negocio debe estar ya funcionando con mercancía visible."
+            },
+            {
+                question: "¿A cuántas semanas se paga?",
+                answer: "Tenemos plazos de 8, 10 y 12 semanas."
+            },
+            {
+                question: "¿Cuáles son los plazos?",
+                answer: "Los plazos son 8 semanas, 10 semanas y 12 semanas."
+            },
+            {
+                question: "¿Cuál plazo es mejor?",
+                answer: "Depende de tu capacidad de pago, pero el de 12 semanas tiene el pago semanal más bajo."
+            },
+            {
+                question: "¿Puedo renovar antes de acabar?",
+                answer: "No, solo puedes renovar al pago 6 (8 sem), 7 (10 sem) o 9 (12 sem)."
+            },
+            {
+                question: "¿Puedo pagar antes de tiempo?",
+                answer: "Puedes pagar por adelantado, pero no se considera para renovación."
+            },
+            {
+                question: "¿Cada cuándo puedo renovar?",
+                answer: "Según tu plazo: en el pago 6, 7 o 9, si tu comportamiento es bueno."
+            },
+            {
+                question: "¿Me aumentan el préstamo en la renovación?",
+                answer: "Sí, si tu historial de pagos fue excelente."
+            },
+            {
+                question: "¿Cuánto tengo que pagar para poder renovar?",
+                answer: "Debes llegar al pago 6, 7 o 9 según el plazo y tener buen comportamiento."
+            },
+            {
+                question: "¿Renuevo con el mismo aval?",
+                answer: "Sí, si sigue vigente y acepta firmar de nuevo."
+            },
+            {
+                question: "¿Qué pasa si quiero renovar y tengo un atraso?",
+                answer: "Puedes renovar con aumento si solo fue un atraso, o con disminución si fueron dos."
+            },
+            {
+                question: "¿Cuánto pago a la semana?",
+                answer: "Depende del monto y plazo. Por cada $1,000 son $175 (8 semanas), $150 (10 semanas), o $135 (12 semanas)."
+            },
+            {
+                question: "¿Dónde se hacen los pagos?",
+                answer: "Los asesores van directamente a tu negocio."
+            },
+            {
+                question: "¿Puedo pagar por transferencia?",
+                answer: "No, solo pagos en efectivo con el asesor."
+            },
+            {
+                question: "¿Aceptan depósito en Oxxo?",
+                answer: "No, el pago debe hacerse directamente con el asesor."
+            },
+            {
+                question: "¿Puedo abonar doble o triple?",
+                answer: "Sí, puedes hacer abonos múltiples, pero no cuenta como adelanto para renovar."
+            },
+            {
+                question: "¿Qué pasa si no tengo para pagar completo?",
+                answer: "Se te marca como mora y puede afectar tu próxima renovación."
+            },
+            {
+                question: "¿Puedo pagar con alguien más?",
+                answer: "Sí, mientras el pago se haga con el asesor."
+            },
+            {
+                question: "¿Tienen algún descuento por pago puntual?",
+                answer: "No hay descuento, pero un buen historial te permite renovar con aumento."
+            },
+            {
+                question: "¿Si pago todo de un jalón, me descuentan?",
+                answer: "No, pero puedes terminar tu crédito antes."
+            },
+            {
+                question: "¿Me descuentan algo cuando me entregan?",
+                answer: "Sí, $50 por cada $1,000 como protección de saldo."
+            },
+            {
+                question: "¿Qué pasa si me atraso un día?",
+                answer: "Se marca como mora. Es mejor avisar al asesor."
+            },
+            {
+                question: "¿Hay recargos por no pagar a tiempo?",
+                answer: "No hay recargos, pero afecta tu renovación."
+            },
+            {
+                question: "¿Cuántos atrasos se permiten?",
+                answer: "Máximo dos. Con tres o más, ya no puedes renovar."
+            },
+            {
+                question: "¿Si no pago esta semana me quitan el préstamo?",
+                answer: "No, pero se acumula y afecta tu historial."
+            },
+            {
+                question: "¿Puedo seguir renovando si tengo moras?",
+                answer: "Sí, dependiendo cuántas hayas tenido."
+            },
+            {
+                question: "¿Cómo afecta el atraso en mi siguiente préstamo?",
+                answer: "Puede reducir el monto que se te ofrece."
+            },
+            {
+                question: "¿Le cobran al aval si me atraso?",
+                answer: "Sí, se le contacta y puede ser responsable del pago."
+            },
+            {
+                question: "¿Me pueden demandar si no pago?",
+                answer: "En casos extremos, sí. Pero primero se busca una solución."
+            },
+            {
+                question: "¿Puedo pedir prórroga?",
+                answer: "No. Se debe pagar conforme al calendario."
+            },
+            {
+                question: "¿Cuándo dejan de renovarme por moras?",
+                answer: "Después de 3 moras ya no se permite renovación."
+            },
+            {
+                question: "¿Cómo pido un préstamo con ustedes?",
+                answer: "Envía tus datos por WhatsApp o habla con un asesor."
+            },
+            {
+                question: "¿Dónde puedo hacer la solicitud?",
+                answer: "Con un asesor autorizado en tu zona."
+            },
+            {
+                question: "¿Tienen oficina?",
+                answer: "Sí, pregunta al asesor por la ubicación."
+            },
+            {
+                question: "¿Van a mi negocio?",
+                answer: "Sí, el asesor acude personalmente."
+            },
+            {
+                question: "¿Cuánto tarda el trámite?",
+                answer: "Una vez validado todo, el mismo día."
+            },
+            {
+                question: "¿Qué días trabajan?",
+                answer: "Lunes a sábado."
+            },
+            {
+                question: "¿Me atienden el sábado?",
+                answer: "Sí, en horario reducido."
+            },
+            {
+                question: "¿Tengo que ir a firmar algo?",
+                answer: "Sí, el contrato y pagaré."
+            },
+            {
+                question: "¿Me llaman para confirmar?",
+                answer: "Sí, Mesa de Control valida por teléfono."
+            },
+            {
+                question: "¿Cuándo me dan el dinero?",
+                answer: "Después de firmar y validar, el mismo día."
+            }
+        ];
 
-<!-- Para que funcione correctamente, puedes reemplazar esto pegando tu HTML completo. -->
+        // Función para calcular el pago semanal
+        function calcularPagoSemanal() {
+            const montoCredito = parseFloat(document.getElementById('montoCredito').value);
+            const plazoSeleccionado = parseInt(document.getElementById('plazoSemanas').value);
+
+            let pagoPorMil;
+            // Definición de pagos por cada $1,000 según el plazo
+            switch (plazoSeleccionado) {
+                case 8:
+                    pagoPorMil = 175;
+                    break;
+                case 10:
+                    pagoPorMil = 150;
+                    break;
+                case 12:
+                    pagoPorMil = 135;
+                    break;
+                default:
+                    pagoPorMil = 0;
+            }
+
+            const pagoTotal = (montoCredito / 1000) * pagoPorMil;
+            const proteccionSaldo = (montoCredito / 1000) * 50; // Descuento de $50 por cada $1,000 prestados
+
+            document.getElementById('pagoSemanalResultado').textContent = Pago Semanal Aproximado: $${pagoTotal.toFixed(2)};
+            document.getElementById('descuentoSaldo').textContent = Descuento por Protección de Saldo (al desembolsar): $${proteccionSaldo.toFixed(2)};
+        }
+
+        // Función para enviar la solicitud del cliente por WhatsApp
+        async function enviarSolicitudWhatsApp(event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById('nombreContacto').value;
+            const telefono = document.getElementById('telefonoContacto').value;
+            const tipoNegocio = document.getElementById('tipoNegocio').value;
+            const montoSolicitado = parseFloat(document.getElementById('montoCredito').value);
+            const plazoSemanas = parseInt(document.getElementById('plazoSemanas').value);
+
+            // Validación básica de los campos
+            if (!nombre || !telefono || !tipoNegocio || !montoSolicitado || !plazoSemanas) {
+                showMessage('Por favor, completa todos los campos del formulario.', 'red');
+                return;
+            }
+
+            // Número de WhatsApp al que se enviará el mensaje
+            const whatsappNumber = '524888898698'; // Asegúrate de incluir el código de país sin '+'
+
+            // Construir el mensaje para WhatsApp
+            const message = ¡Hola!%0APreciso información sobre un crédito semanal.%0A%0AMis datos son:%0ANombre: ${nombre}%0ATeléfono: ${telefono}%0ATipo de Negocio: ${tipoNegocio}%0AMonto Solicitado: $${montoSolicitado}%0APlazo Deseado: ${plazoSemanas} semanas%0A%0A¡Espero tu contacto pronto!;
+
+            // Codificar el mensaje para la URL
+            const whatsappUrl = https://wa.me/${whatsappNumber}?text=${message};
+
+            // Abrir WhatsApp en una nueva pestaña/ventana
+            window.open(whatsappUrl, '_blank');
+
+            showMessage('Se ha abierto WhatsApp para que envíes tu solicitud.', 'green');
+            document.getElementById('contactoForm').reset(); // Limpiar el formulario después del envío
+        }
+
+        // Función para mostrar mensajes al usuario (éxito o error)
+        function showMessage(message, type) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            // Asignar clases Tailwind para el estilo del mensaje
+            messageBox.className = p-3 rounded-md mb-4 text-white ${type === 'green' ? 'bg-green-500' : 'bg-red-500'};
+            messageBox.style.display = 'block';
+            // Ocultar el mensaje automáticamente después de 5 segundos
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 5000);
+        }
+
+        // --- FUNCIONALIDAD DEL ASESOR VIRTUAL (GEMINI API) ---
+        let chatHistory = []; // Para mantener el historial de conversación
+
+        async function askVirtualAssistant() {
+            const userQuestionInput = document.getElementById('userQuestion');
+            const chatOutput = document.getElementById('chatOutput');
+            const askButton = document.getElementById('askButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            const prompt = userQuestionInput.value.trim();
+            if (!prompt) {
+                showMessage('Por favor, escribe tu pregunta para el asesor virtual.', 'red');
+                return;
+            }
+
+            // Deshabilitar botón y mostrar carga
+            askButton.disabled = true;
+            loadingIndicator.style.display = 'block';
+            userQuestionInput.value = ''; // Limpiar input
+
+            // Añadir la pregunta del usuario al historial de chat
+            chatOutput.innerHTML += <div class="bg-blue-100 p-3 rounded-lg self-end max-w-[80%] my-2 shadow-sm"><strong>Tú:</strong> ${prompt}</div>;
+            chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll al final
+
+            try {
+                // Construir el contexto de FAQs para el LLM
+                let faqsContext = "Las siguientes son Preguntas Frecuentes sobre nuestros créditos:\n\n";
+                faqs.forEach(faq => {
+                    faqsContext += P: ${faq.question}\nR: ${faq.answer}\n\n;
+                });
+
+                // Instrucciones para el LLM
+                const llmInstructions = Eres un asesor virtual amigable de Fincapital, especializado en créditos semanales para negocios en Matehuala.
+                Usa la siguiente información de Preguntas Frecuentes para responder a las preguntas del usuario.
+                Si la respuesta no se encuentra en las Preguntas Frecuentes, o si la pregunta es sobre contactar a alguien, indica al usuario que se puede contactar a un asesor real por WhatsApp. NO incluyas el número de WhatsApp directamente, en su lugar, simplemente di 'contactar por WhatsApp'. Yo me encargaré de generar el enlace.
+                Mantén tus respuestas concisas y directas.
+
+                ${faqsContext}
+                ;
+
+                // Agregar las instrucciones y la pregunta del usuario al historial para el LLM
+                const fullPrompt = llmInstructions + Pregunta del usuario: ${prompt};
+                chatHistory.push({ role: "user", parts: [{ text: fullPrompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // La API key será proporcionada por el entorno
+                const apiUrl = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey};
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let assistantResponse = result.candidates[0].content.parts[0].text;
+
+                    // Si la respuesta del asistente menciona "contactar por WhatsApp", reemplazar con un enlace
+                    if (assistantResponse.includes('contactar por WhatsApp')) {
+                        const whatsappNumber = '524888898698';
+                        const whatsappMessage = encodeURIComponent(Hola, mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?);
+                        const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
+                        assistantResponse = assistantResponse.replace(
+                            'contactar por WhatsApp',
+                            <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contactar por WhatsApp aquí</a>
+                        );
+                    }
+
+                    // Añadir la respuesta del asistente al historial de chat y al chatHistory para futuras interacciones
+                    chatHistory.push({ role: "model", parts: [{ text: assistantResponse }] });
+                    chatOutput.innerHTML += <div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm"><strong>Asesor Virtual:</strong> ${assistantResponse}</div>;
+                } else {
+                    console.error("Respuesta inesperada del LLM:", result);
+                    const whatsappNumber = '524888898698';
+                    const whatsappMessage = encodeURIComponent(Hola, tengo una duda sobre: "${prompt}". ¿Podrías ayudarme con esto?);
+                    const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
+                    chatOutput.innerHTML += <div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700"><strong>Asesor Virtual:</strong> Lo siento, no pude obtener una respuesta en este momento. Por favor, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>;
+                }
+            } catch (error) {
+                console.error("Error al comunicarse con el Asesor Virtual:", error);
+                const whatsappNumber = '524888898698';
+                const whatsappMessage = encodeURIComponent(Hola, tengo un problema con el asesor virtual y mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?);
+                const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
+                chatOutput.innerHTML += <div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700"><strong>Asesor Virtual:</strong> Ocurrió un error. Por favor, verifica tu conexión o intenta más tarde. Si el problema persiste, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>;
+            } finally {
+                // Habilitar botón y ocultar carga
+                askButton.disabled = false;
+                loadingIndicator.style.display = 'none';
+                chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll al final
+            }
+        }
+        // --- FIN FUNCIONALIDAD DEL ASESOR VIRTUAL ---
+
+
+        // Asignar eventos cuando el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('montoCredito').addEventListener('input', calcularPagoSemanal);
+            document.getElementById('plazoSemanas').addEventListener('change', calcularPagoSemanal);
+            // Cambiar el evento de submit para usar la nueva función de WhatsApp
+            document.getElementById('contactoForm').addEventListener('submit', enviarSolicitudWhatsApp);
+
+            // Asignar evento para el Asesor Virtual
+            document.getElementById('askButton').addEventListener('click', askVirtualAssistant);
+            // Permitir enviar con Enter en el campo de texto del chat
+            document.getElementById('userQuestion').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { // Evitar envío con Shift + Enter
+                    e.preventDefault(); // Prevenir salto de línea por defecto
+                    askVirtualAssistant();
+                }
+            });
+
+            // Calcular el pago inicial al cargar la página para mostrar valores por defecto
+            calcularPagoSemanal();
+        });
+    </script>
+    <style>
+        /* Definición de la fuente Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Colores de la marca Fincapital basados en el logo */
+        .fincapital-blue-dark { /* Aproximado para "FIN" */
+            background-color: #244B6D;
+        }
+        .fincapital-blue-dark-text {
+            color: #244B6D;
+        }
+        .fincapital-teal { /* Aproximado para parte del icono */
+            background-color: #33B8CE;
+        }
+        .fincapital-teal-text {
+            color: #33B8CE;
+        }
+        .fincapital-green { /* Aproximado para "capital" */
+            background-color: #1DA87C;
+        }
+        .fincapital-green-text {
+            color: #1DA87C;
+        }
+        .fincapital-yellow { /* Aproximado para el círculo en el icono */
+            background-color: #F8B600;
+        }
+        .fincapital-yellow-text {
+            color: #F8B600;
+        }
+        /* Estilos generales para inputs y botones */
+        input, select, textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #33B8CE; /* Teal para el foco */
+            box-shadow: 0 0 0 3px rgba(51, 184, 206, 0.4); /* Sombra para el foco */
+        }
+        button {
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.75rem 1.5rem;
+            font-weight: 600; /* font-semibold */
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+        }
+        .btn-primary {
+            background-color: #1DA87C; /* Verde Fincapital */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #168a65; /* Verde más oscuro al pasar el ratón */
+            transform: translateY(-2px); /* Pequeño efecto de elevación */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .icon-small {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        /* Estilos para el chat */
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-500 to-indigo-700 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="container mx-auto bg-white p-8 rounded-xl shadow-2xl space-y-8 max-w-4xl">
+        <!-- Encabezado con Logo y Título -->
+        <header class="text-center">
+            <!-- Usando un placeholder con los colores del logo de Fincapital -->
+            <img src="https://placehold.co/180x60/244B6D/F8B600?text=FINcapital" alt="Logo de Fincapital" class="mx-auto mb-4 rounded-md shadow-md">
+            <h1 class="text-5xl font-extrabold fincapital-blue-dark-text mb-2">Fincapital</h1>
+            <p class="text-xl text-gray-700">Créditos Semanales en Matehuala</p>
+        </header>
+
+        <!-- Sección de Propósito -->
+        <section class="text-center bg-blue-50 p-6 rounded-lg shadow-inner flex flex-col items-center">
+            <img src="https://placehold.co/100x100/1DA87C/FFFFFF?text=Negocio" alt="Negocio en crecimiento" class="mx-auto mb-4 rounded-full shadow-md">
+            <h2 class="text-3xl font-bold fincapital-blue-dark-text mb-3">¡Impulsa tu negocio con nuestros créditos!</h2>
+            <p class="text-gray-700 leading-relaxed">En Fincapital, te ofrecemos soluciones financieras flexibles diseñadas para dueños de negocios con local fijo en Matehuala. Nuestro objetivo es que tu negocio siga creciendo sin complicaciones. Simula tu crédito y descubre lo fácil que es obtener el apoyo que necesitas.</p>
+        </section>
+
+        <!-- Requisitos Generales - Amigables y con imágenes -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold fincapital-teal-text mb-4 text-center">¡Obtén tu crédito en minutos con Fincapital!</h2>
+            <p class="text-gray-700 mb-8 text-center">Una vez que envíes tu solicitud por WhatsApp, te damos respuesta en ¡solo 15 minutos! Aquí te contamos lo que necesitamos para agilizar tu proceso:</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-gray-700">
+
+                <!-- Requisito 1: Tu Negocio -->
+                <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-green">
+                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=🛍️" alt="Icono de Tienda" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <h3 class="text-xl font-semibold mb-2 fincapital-green-text">Tu Negocio y Domicilio</h3>
+                    <ul class="list-none space-y-1 text-sm">
+                        <li>✅ Ser dueño de un negocio con local físico (¡como abarrotes, comida, ferreterías, etc.!).</li>
+                        <li>✅ Que tu negocio esté activo y con mercancía visible.</li>
+                        <li>✅ Contar con un comprobante de domicilio reciente.</li>
+                    </ul>
+                </div>
+
+                <!-- Requisito 2: Tu Identificación -->
+                <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-teal">
+                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=🆔" alt="Icono de Identificación" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <h3 class="text-xl font-semibold mb-2 fincapital-teal-text">Tu Identificación y Documentos</h3>
+                    <ul class="list-none space-y-1 text-sm">
+                        <li>✅ Presentar tu INE (original y copia).</li>
+                        <li>✅ Un pagaré y un contrato firmados (¡te explicaremos cada detalle!).</li>
+                        <li>✅ Evidencia de titularidad o arraigo de tu negocio.</li>
+                    </ul>
+                </div>
+
+                <!-- Requisito 3: Tu Aval y Coordinación -->
+                <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-yellow">
+                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=🤝" alt="Icono de Aval" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <h3 class="text-xl font-semibold mb-2 fincapital-yellow-text">Tu Aval y Coordinación</h3>
+                    <!-- Nueva imagen añadida aquí -->
+                    <img src="https://placehold.co/120x80/F8B600/FFFFFF?text=🤝+🤝" alt="Apretón de manos" class="w-30 h-20 mb-4 rounded-md shadow-sm">
+                    <ul class="list-none space-y-1 text-sm">
+                        <li>✅ Un aval con su INE (original y copia).</li>
+                        <li>✅ Tu aval no debe ser familiar directo ni vivir contigo o en el mismo negocio.</li>
+                        <li>✅ Atención a una rápida llamada de validación.</li>
+                        <li>✅ Coordinación con nuestro gerente de sucursal para finalizar.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tipos de Crédito por Plazo -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold fincapital-teal-text mb-4">Descubre Nuestros Créditos Semanales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Crédito 8 Semanas -->
+                <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-green flex flex-col items-center text-center">
+                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=8" alt="Crédito a 8 semanas" class="mx-auto mb-3 rounded-full">
+                    <h3 class="text-xl font-bold fincapital-green-text mb-2">Crédito a 8 Semanas</h3>
+                    <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
+                    <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
+                    <p class="text-gray-700 mb-3"><strong>Tu Pago por cada $1,000:</strong> $175</p>
+                    <p class="text-gray-600 text-sm">¡Ideal si buscas un retorno de inversión rápido y mayor liquidez!</p>
+                </div>
+                <!-- Crédito 10 Semanas -->
+                <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-teal flex flex-col items-center text-center">
+                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=10" alt="Crédito a 10 semanas" class="mx-auto mb-3 rounded-full">
+                    <h3 class="text-xl font-bold fincapital-teal-text mb-2">Crédito a 10 Semanas</h3>
+                    <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
+                    <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
+                    <p class="text-700 mb-3"><strong>Tu Pago por cada $1,000:</strong> $150</p>
+                    <p class="text-gray-600 text-sm">La opción perfecta para un equilibrio entre plazo y comodidad de pago.</p>
+                </div>
+                <!-- Crédito 12 Semanas -->
+                <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-yellow flex flex-col items-center text-center">
+                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=12" alt="Crédito a 12 semanas" class="mx-auto mb-3 rounded-full">
+                    <h3 class="text-xl font-bold fincapital-yellow-text mb-2">Crédito a 12 Semanas</h3>
+                    <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
+                    <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
+                    <p class="text-gray-700 mb-3"><strong>Tu Pago por cada $1,000:</strong> $135</p>
+                    <p class="text-gray-600 text-sm">¡Con los pagos semanales más bajos para tu máxima comodidad financiera!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulador de Créditos -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4">Simulador de Crédito Semanal</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="montoCredito" class="block text-gray-700 font-medium mb-2">Monto del Crédito:</label>
+                    <select id="montoCredito" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <option value="5000">$5,000</option>
+                        <option value="6000">$6,000</option>
+                        <option value="7000">$7,000</option>
+                        <option value="8000">$8,000</option>
+                        <option value="9000">$9,000</option>
+                        <option value="10000">$10,000</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="plazoSemanas" class="block text-gray-700 font-medium mb-2">Plazo (Semanas):</label>
+                    <select id="plazoSemanas" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <option value="8">8 Semanas</option>
+                        <option value="10">10 Semanas</option>
+                        <option value="12">12 Semanas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-blue-100 rounded-md text-blue-800 font-semibold text-lg text-center border border-fincapital-teal">
+                <p id="pagoSemanalResultado">Pago Semanal Aproximado: $0.00</p>
+                <p id="descuentoSaldo" class="text-sm mt-1 text-blue-700">Descuento por Protección de Saldo (al desembolsar): $0.00</p>
+            </div>
+        </section>
+
+        <!-- Mensajes del sistema -->
+        <div id="message-box" class="hidden p-3 rounded-md mb-4 text-white text-center"></div>
+
+        <!-- Formulario de Contacto -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4">¡Te Contactamos para tu Crédito!</h2>
+            <p class="text-gray-700 mb-4">Déjanos tus datos y al hacer clic en "Enviar Solicitud" se abrirá una conversación de WhatsApp con nuestros asesores, listos para ayudarte a impulsar tu negocio.</p>
+            <form id="contactoForm" class="space-y-4">
+                <div>
+                    <label for="nombreContacto" class="block text-gray-700 font-medium mb-2">Nombre Completo:</label>
+                    <input type="text" id="nombreContacto" placeholder="Tu nombre" required class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="telefonoContacto" class="block text-gray-700 font-medium mb-2">Teléfono:</label>
+                    <input type="tel" id="telefonoContacto" placeholder="Ej. 8123456789 (10 dígitos)" pattern="[0-9]{10}" title="Por favor, ingresa un número de teléfono de 10 dígitos." required class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="tipoNegocio" class="block text-gray-700 font-medium mb-2">Tipo de Negocio:</label>
+                    <select id="tipoNegocio" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <option value="">Selecciona tu tipo de negocio</option>
+                        <option value="abarrotes">Tienda de Abarrotes</option>
+                        <option value="comida">Negocio de Comida</option>
+                        <option value="tlapaleria">Tlapalería</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full btn-primary hover:bg-fincapital-green-dark text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
+                    Enviar Solicitud por WhatsApp
+                </button>
+            </form>
+        </section>
+
+        <!-- Sección del Asesor Virtual (LLM con Gemini API) -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4 text-center">Asesor Virtual ✨</h2>
+            <p class="text-gray-700 mb-4 text-center">Pregunta a nuestro asistente inteligente sobre los créditos, requisitos o cualquier duda que tengas.</p>
+            <div class="chat-container mb-4" id="chatOutput">
+                <!-- El historial del chat se mostrará aquí -->
+                <div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm"><strong>Asesor Virtual:</strong> ¡Hola! ¿En qué puedo ayudarte hoy sobre tu crédito en Fincapital?</div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="userQuestion" placeholder="Escribe tu pregunta aquí..." class="flex-grow focus:ring-fincapital-teal focus:border-fincapital-teal">
+                <button id="askButton" class="btn-primary flex-shrink-0 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Preguntar ✨
+                </button>
+            </div>
+            <div id="loadingIndicator" class="mt-4 text-center text-gray-600 hidden">Cargando respuesta...</div>
+        </section>
+
+        <!-- Pie de página -->
+        <footer class="text-center text-gray-600 mt-8">
+            <p>&copy; 2024 Fincapital. Creciendo juntos con negocios de verdad.</p>
+        </footer>
+    </div>
+</body>
+</html>
