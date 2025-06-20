@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crédito Semanal Matehuala - Fincapital</title>
+    <!-- Carga de Tailwind CSS para un diseño responsivo y moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         // La integración con Firebase Firestore ha sido eliminada ya que el objetivo es enviar por WhatsApp.
 
-        // Preguntas Frecuentes para el Asesor Virtual
+        // Preguntas Frecuentes (FAQs) para el Asesor Virtual.
+        // Este array contiene pares de preguntas y respuestas que el LLM usará como contexto.
         const faqs = [
             {
                 question: "¿Qué papeles necesito para pedir el préstamo?",
@@ -252,10 +254,21 @@
             }
         ];
 
-        // Función para calcular el pago semanal
+        // Función para calcular el pago semanal y el descuento por protección de saldo
         function calcularPagoSemanal() {
-            const montoCredito = parseFloat(document.getElementById('montoCredito').value);
-            const plazoSeleccionado = parseInt(document.getElementById('plazoSemanas').value);
+            const montoCreditoElement = document.getElementById('montoCredito');
+            const plazoSemanasElement = document.getElementById('plazoSemanas');
+            const pagoSemanalResultadoElement = document.getElementById('pagoSemanalResultado');
+            const descuentoSaldoElement = document.getElementById('descuentoSaldo');
+
+            // Asegurar que los elementos existen antes de intentar acceder a sus valores
+            if (!montoCreditoElement || !plazoSemanasElement || !pagoSemanalResultadoElement || !descuentoSaldoElement) {
+                console.error("Error: Elementos del simulador no encontrados.");
+                return;
+            }
+
+            const montoCredito = parseFloat(montoCreditoElement.value);
+            const plazoSeleccionado = parseInt(plazoSemanasElement.value);
 
             let pagoPorMil;
             // Definición de pagos por cada $1,000 según el plazo
@@ -270,58 +283,67 @@
                     pagoPorMil = 135;
                     break;
                 default:
-                    pagoPorMil = 0;
+                    pagoPorMil = 0; // Valor por defecto si el plazo no es válido
             }
 
             const pagoTotal = (montoCredito / 1000) * pagoPorMil;
             const proteccionSaldo = (montoCredito / 1000) * 50; // Descuento de $50 por cada $1,000 prestados
 
-            document.getElementById('pagoSemanalResultado').textContent = Pago Semanal Aproximado: $${pagoTotal.toFixed(2)};
-            document.getElementById('descuentoSaldo').textContent = Descuento por Protección de Saldo (al desembolsar): $${proteccionSaldo.toFixed(2)};
+            pagoSemanalResultadoElement.textContent = `Pago Semanal Aproximado: $${pagoTotal.toFixed(2)}`;
+            descuentoSaldoElement.textContent = `Descuento por Protección de Saldo (al desembolsar): $${proteccionSaldo.toFixed(2)}`;
         }
 
         // Función para enviar la solicitud del cliente por WhatsApp
         async function enviarSolicitudWhatsApp(event) {
-            event.preventDefault();
+            event.preventDefault(); // Evita el envío del formulario tradicional
 
-            const nombre = document.getElementById('nombreContacto').value;
-            const telefono = document.getElementById('telefonoContacto').value;
-            const tipoNegocio = document.getElementById('tipoNegocio').value;
-            const montoSolicitado = parseFloat(document.getElementById('montoCredito').value);
-            const plazoSemanas = parseInt(document.getElementById('plazoSemanas').value);
+            const nombre = document.getElementById('nombreContacto')?.value;
+            const telefono = document.getElementById('telefonoContacto')?.value;
+            const tipoNegocio = document.getElementById('tipoNegocio')?.value;
+            const montoSolicitado = parseFloat(document.getElementById('montoCredito')?.value);
+            const plazoSemanas = parseInt(document.getElementById('plazoSemanas')?.value);
 
-            // Validación básica de los campos
-            if (!nombre || !telefono || !tipoNegocio || !montoSolicitado || !plazoSemanas) {
-                showMessage('Por favor, completa todos los campos del formulario.', 'red');
+            // Validación mejorada de los campos
+            if (!nombre || !telefono || !tipoNegocio || isNaN(montoSolicitado) || isNaN(plazoSemanas) || telefono.length !== 10) {
+                showMessage('Por favor, completa todos los campos del formulario correctamente.', 'red');
                 return;
             }
 
-            // Número de WhatsApp al que se enviará el mensaje
-            const whatsappNumber = '524888898698'; // Asegúrate de incluir el código de país sin '+'
+            // Número de WhatsApp al que se enviará el mensaje (sin '+')
+            const whatsappNumber = '524888898698';
 
-            // Construir el mensaje para WhatsApp
-            const message = ¡Hola!%0APreciso información sobre un crédito semanal.%0A%0AMis datos son:%0ANombre: ${nombre}%0ATeléfono: ${telefono}%0ATipo de Negocio: ${tipoNegocio}%0AMonto Solicitado: $${montoSolicitado}%0APlazo Deseado: ${plazoSemanas} semanas%0A%0A¡Espero tu contacto pronto!;
+            // Construir el mensaje para WhatsApp, usando encodeURIComponent para seguridad de URL
+            const message = encodeURIComponent(`¡Hola!%0APreciso información sobre un crédito semanal.%0A%0AMis datos son:%0ANombre: ${nombre}%0ATeléfono: ${telefono}%0ATipo de Negocio: ${tipoNegocio}%0AMonto Solicitado: $${montoSolicitado.toLocaleString('es-MX')}%0APlazo Deseado: ${plazoSemanas} semanas%0A%0A¡Espero tu contacto pronto!`);
 
-            // Codificar el mensaje para la URL
-            const whatsappUrl = https://wa.me/${whatsappNumber}?text=${message};
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 
             // Abrir WhatsApp en una nueva pestaña/ventana
             window.open(whatsappUrl, '_blank');
 
             showMessage('Se ha abierto WhatsApp para que envíes tu solicitud.', 'green');
-            document.getElementById('contactoForm').reset(); // Limpiar el formulario después del envío
+            document.getElementById('contactoForm')?.reset(); // Limpiar el formulario después del envío
+            calcularPagoSemanal(); // Recalcular el simulador para mostrar los valores por defecto
         }
 
-        // Función para mostrar mensajes al usuario (éxito o error)
+        // Función para mostrar mensajes al usuario (éxito o error) en un cuadro de mensaje flotante
         function showMessage(message, type) {
             const messageBox = document.getElementById('message-box');
+            if (!messageBox) {
+                console.error("Error: message-box element not found.");
+                return;
+            }
             messageBox.textContent = message;
             // Asignar clases Tailwind para el estilo del mensaje
-            messageBox.className = p-3 rounded-md mb-4 text-white ${type === 'green' ? 'bg-green-500' : 'bg-red-500'};
+            messageBox.className = `p-3 rounded-md mb-4 text-white text-center transition-all duration-300 ease-in-out ${type === 'green' ? 'bg-green-500' : 'bg-red-500'}`;
             messageBox.style.display = 'block';
-            // Ocultar el mensaje automáticamente después de 5 segundos
+            messageBox.style.opacity = '1';
+
+            // Ocultar el mensaje automáticamente después de 5 segundos con una transición de desvanecimiento
             setTimeout(() => {
-                messageBox.style.display = 'none';
+                messageBox.style.opacity = '0';
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Coincide con la duración de la transición
             }, 5000);
         }
 
@@ -334,6 +356,11 @@
             const askButton = document.getElementById('askButton');
             const loadingIndicator = document.getElementById('loadingIndicator');
 
+            if (!userQuestionInput || !chatOutput || !askButton || !loadingIndicator) {
+                console.error("Error: Elementos del chat del asistente virtual no encontrados.");
+                return;
+            }
+
             const prompt = userQuestionInput.value.trim();
             if (!prompt) {
                 showMessage('Por favor, escribe tu pregunta para el asesor virtual.', 'red');
@@ -343,35 +370,39 @@
             // Deshabilitar botón y mostrar carga
             askButton.disabled = true;
             loadingIndicator.style.display = 'block';
-            userQuestionInput.value = ''; // Limpiar input
+            userQuestionInput.value = ''; // Limpiar input después de obtener el prompt
 
-            // Añadir la pregunta del usuario al historial de chat
-            chatOutput.innerHTML += <div class="bg-blue-100 p-3 rounded-lg self-end max-w-[80%] my-2 shadow-sm"><strong>Tú:</strong> ${prompt}</div>;
-            chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll al final
+            // Añadir la pregunta del usuario al historial de chat en la UI
+            chatOutput.innerHTML += `<div class="bg-blue-100 p-3 rounded-lg self-end max-w-[80%] my-2 shadow-sm animate-fade-in"><strong>Tú:</strong> ${prompt}</div>`;
+            chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll al final del chat
 
             try {
                 // Construir el contexto de FAQs para el LLM
                 let faqsContext = "Las siguientes son Preguntas Frecuentes sobre nuestros créditos:\n\n";
                 faqs.forEach(faq => {
-                    faqsContext += P: ${faq.question}\nR: ${faq.answer}\n\n;
+                    faqsContext += `P: ${faq.question}\nR: ${faq.answer}\n\n`;
                 });
 
-                // Instrucciones para el LLM
-                const llmInstructions = Eres un asesor virtual amigable de Fincapital, especializado en créditos semanales para negocios en Matehuala.
-                Usa la siguiente información de Preguntas Frecuentes para responder a las preguntas del usuario.
-                Si la respuesta no se encuentra en las Preguntas Frecuentes, o si la pregunta es sobre contactar a alguien, indica al usuario que se puede contactar a un asesor real por WhatsApp. NO incluyas el número de WhatsApp directamente, en su lugar, simplemente di 'contactar por WhatsApp'. Yo me encargaré de generar el enlace.
-                Mantén tus respuestas concisas y directas.
+                // Instrucciones para el LLM, especificando el rol y el comportamiento deseado
+                const llmInstructions = `Eres un asesor virtual amigable y útil de Fincapital, especializado en créditos semanales para negocios en Matehuala, México.
+                Usa la siguiente información de Preguntas Frecuentes para responder a las preguntas del usuario de manera concisa y directa.
+                Si la respuesta no se encuentra explícitamente en las Preguntas Frecuentes, o si la pregunta es sobre cómo contactar a alguien, indica al usuario que se puede contactar a un asesor real por WhatsApp. NO incluyas el número de WhatsApp directamente, en su lugar, simplemente di 'contactar por WhatsApp'. Yo me encargaré de generar el enlace dinámicamente.
+                Evita dar información que no esté en las FAQs o que sea un supuesto. Siempre mantente dentro del rol de asesor de Fincapital.
 
                 ${faqsContext}
-                ;
+                `;
 
-                // Agregar las instrucciones y la pregunta del usuario al historial para el LLM
-                const fullPrompt = llmInstructions + Pregunta del usuario: ${prompt};
-                chatHistory.push({ role: "user", parts: [{ text: fullPrompt }] });
+                // Agregar las instrucciones al inicio del historial de chat para el LLM en cada llamada,
+                // para asegurar que el contexto se mantiene y el modelo no "obvia" su rol o las FAQs.
+                // Es importante enviar el prompt del usuario como un mensaje separado para el modelo.
+                const messagesForLLM = [
+                    { role: "user", parts: [{ text: llmInstructions }] }, // System instructions
+                    { role: "user", parts: [{ text: prompt }] } // User's actual question
+                ];
 
-                const payload = { contents: chatHistory };
-                const apiKey = ""; // La API key será proporcionada por el entorno
-                const apiUrl = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey};
+                const payload = { contents: messagesForLLM }; // Enviar el contexto y la pregunta actual
+                const apiKey = ""; // La API key será proporcionada por el entorno de Canvas
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -386,56 +417,56 @@
                     result.candidates[0].content.parts.length > 0) {
                     let assistantResponse = result.candidates[0].content.parts[0].text;
 
-                    // Si la respuesta del asistente menciona "contactar por WhatsApp", reemplazar con un enlace
+                    // Si la respuesta del asistente menciona "contactar por WhatsApp", reemplazar con un enlace dinámico
                     if (assistantResponse.includes('contactar por WhatsApp')) {
-                        const whatsappNumber = '524888898698';
-                        const whatsappMessage = encodeURIComponent(Hola, mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?);
-                        const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
+                        const whatsappNumber = '524888898698'; // Número de WhatsApp para el contacto
+                        const whatsappMessage = encodeURIComponent(`Hola, mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?`);
+                        const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
                         assistantResponse = assistantResponse.replace(
                             'contactar por WhatsApp',
-                            <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contactar por WhatsApp aquí</a>
+                            `<a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contactar por WhatsApp aquí</a>`
                         );
                     }
 
-                    // Añadir la respuesta del asistente al historial de chat y al chatHistory para futuras interacciones
-                    chatHistory.push({ role: "model", parts: [{ text: assistantResponse }] });
-                    chatOutput.innerHTML += <div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm"><strong>Asesor Virtual:</strong> ${assistantResponse}</div>;
+                    // Añadir la respuesta del asistente al historial de chat en la UI
+                    chatOutput.innerHTML += `<div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm animate-fade-in"><strong>Asesor Virtual:</strong> ${assistantResponse}</div>`;
                 } else {
                     console.error("Respuesta inesperada del LLM:", result);
                     const whatsappNumber = '524888898698';
-                    const whatsappMessage = encodeURIComponent(Hola, tengo una duda sobre: "${prompt}". ¿Podrías ayudarme con esto?);
-                    const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
-                    chatOutput.innerHTML += <div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700"><strong>Asesor Virtual:</strong> Lo siento, no pude obtener una respuesta en este momento. Por favor, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>;
+                    const whatsappMessage = encodeURIComponent(`Hola, tengo una duda sobre: "${prompt}". ¿Podrías ayudarme con esto?`);
+                    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+                    chatOutput.innerHTML += `<div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700 animate-fade-in"><strong>Asesor Virtual:</strong> Lo siento, no pude obtener una respuesta en este momento. Por favor, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>`;
                 }
             } catch (error) {
                 console.error("Error al comunicarse con el Asesor Virtual:", error);
                 const whatsappNumber = '524888898698';
-                const whatsappMessage = encodeURIComponent(Hola, tengo un problema con el asesor virtual y mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?);
-                const whatsappLink = https://wa.me/${whatsappNumber}?text=${whatsappMessage};
-                chatOutput.innerHTML += <div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700"><strong>Asesor Virtual:</strong> Ocurrió un error. Por favor, verifica tu conexión o intenta más tarde. Si el problema persiste, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>;
+                const whatsappMessage = encodeURIComponent(`Hola, tengo un problema con el asesor virtual y mi pregunta es: "${prompt}". ¿Podrías ayudarme con esto?`);
+                const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+                chatOutput.innerHTML += `<div class="bg-red-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm text-red-700 animate-fade-in"><strong>Asesor Virtual:</strong> Ocurrió un error. Por favor, verifica tu conexión o intenta más tarde. Si el problema persiste, <a href="${whatsappLink}" target="_blank" class="text-blue-600 hover:underline font-semibold">contacta a un asesor real por WhatsApp aquí</a>.</div>`;
             } finally {
-                // Habilitar botón y ocultar carga
+                // Habilitar botón y ocultar carga, asegurar scroll al final
                 askButton.disabled = false;
                 loadingIndicator.style.display = 'none';
-                chatOutput.scrollTop = chatOutput.scrollHeight; // Scroll al final
+                chatOutput.scrollTop = chatOutput.scrollHeight;
             }
         }
         // --- FIN FUNCIONALIDAD DEL ASESOR VIRTUAL ---
 
-
         // Asignar eventos cuando el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('montoCredito').addEventListener('input', calcularPagoSemanal);
-            document.getElementById('plazoSemanas').addEventListener('change', calcularPagoSemanal);
-            // Cambiar el evento de submit para usar la nueva función de WhatsApp
-            document.getElementById('contactoForm').addEventListener('submit', enviarSolicitudWhatsApp);
+            // Eventos para el simulador de crédito
+            document.getElementById('montoCredito')?.addEventListener('input', calcularPagoSemanal);
+            document.getElementById('plazoSemanas')?.addEventListener('change', calcularPagoSemanal);
 
-            // Asignar evento para el Asesor Virtual
-            document.getElementById('askButton').addEventListener('click', askVirtualAssistant);
-            // Permitir enviar con Enter en el campo de texto del chat
-            document.getElementById('userQuestion').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) { // Evitar envío con Shift + Enter
-                    e.preventDefault(); // Prevenir salto de línea por defecto
+            // Evento para el formulario de contacto de WhatsApp
+            document.getElementById('contactoForm')?.addEventListener('submit', enviarSolicitudWhatsApp);
+
+            // Eventos para el Asesor Virtual
+            document.getElementById('askButton')?.addEventListener('click', askVirtualAssistant);
+            // Permitir enviar la pregunta del chat con la tecla Enter
+            document.getElementById('userQuestion')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { // Evitar envío con Shift + Enter para saltos de línea
+                    e.preventDefault(); // Prevenir el comportamiento por defecto de Enter (ej. salto de línea en textarea)
                     askVirtualAssistant();
                 }
             });
@@ -445,13 +476,13 @@
         });
     </script>
     <style>
-        /* Definición de la fuente Inter */
+        /* Importación de la fuente Inter desde Google Fonts para una tipografía moderna */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f0f2f5; /* Color de fondo suave */
         }
-        /* Colores de la marca Fincapital basados en el logo */
+        /* Colores de la marca Fincapital basados en el logo para consistencia visual */
         .fincapital-blue-dark { /* Aproximado para "FIN" */
             background-color: #244B6D;
         }
@@ -476,7 +507,7 @@
         .fincapital-yellow-text {
             color: #F8B600;
         }
-        /* Estilos generales para inputs y botones */
+        /* Estilos generales para inputs y botones, con un enfoque en accesibilidad y UX */
         input, select, textarea {
             border: 1px solid #d1d5db;
             border-radius: 0.375rem; /* rounded-md */
@@ -486,70 +517,83 @@
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #33B8CE; /* Teal para el foco */
-            box-shadow: 0 0 0 3px rgba(51, 184, 206, 0.4); /* Sombra para el foco */
+            border-color: #33B8CE; /* Teal para el foco, mejora la visibilidad al interactuar */
+            box-shadow: 0 0 0 3px rgba(51, 184, 206, 0.4); /* Sombra para el foco, accesibilidad */
         }
         button {
             border-radius: 0.5rem; /* rounded-lg */
             padding: 0.75rem 1.5rem;
             font-weight: 600; /* font-semibold */
             transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave para un efecto 3D */
         }
         .btn-primary {
-            background-color: #1DA87C; /* Verde Fincapital */
+            background-color: #1DA87C; /* Verde Fincapital como color principal de acción */
             color: white;
         }
         .btn-primary:hover {
             background-color: #168a65; /* Verde más oscuro al pasar el ratón */
-            transform: translateY(-2px); /* Pequeño efecto de elevación */
+            transform: translateY(-2px); /* Pequeño efecto de elevación para interactividad */
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
         }
-        .icon-small {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
+        .btn-primary:disabled {
+            background-color: #a0a0a0; /* Color gris para botones deshabilitados */
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: none;
         }
-        /* Estilos para el chat */
+        /* Estilos para el contenedor del chat para una mejor presentación */
         .chat-container {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
+            height: 300px; /* Altura fija para el área de chat */
+            overflow-y: auto; /* Permite desplazamiento vertical cuando el contenido excede la altura */
+            border: 1px solid #e2e8f0; /* Borde suave */
+            background-color: #f8fafc; /* Fondo claro para el chat */
             border-radius: 0.5rem;
             padding: 1rem;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Organiza los mensajes de arriba hacia abajo */
+            scroll-behavior: smooth; /* Desplazamiento suave al agregar nuevos mensajes */
+        }
+        /* Animación de entrada para los mensajes del chat */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
         }
     </style>
 </head>
+<!-- El cuerpo usa un degradado de fondo y centrado para un diseño visualmente atractivo -->
 <body class="bg-gradient-to-br from-blue-500 to-indigo-700 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <!-- Contenedor principal de la página, con sombra y esquinas redondeadas -->
     <div class="container mx-auto bg-white p-8 rounded-xl shadow-2xl space-y-8 max-w-4xl">
-        <!-- Encabezado con Logo y Título -->
+        <!-- Encabezado con Logo y Título de la empresa -->
         <header class="text-center">
-            <!-- Usando un placeholder con los colores del logo de Fincapital -->
-            <img src="https://placehold.co/180x60/244B6D/F8B600?text=FINcapital" alt="Logo de Fincapital" class="mx-auto mb-4 rounded-md shadow-md">
+            <!-- Logo de Fincapital usando un placeholder con los colores de la marca -->
+            <img src="https://placehold.co/180x60/244B6D/F8B600?text=FINcapital" alt="Logo de Fincapital: FIN en azul oscuro, capital en amarillo" class="mx-auto mb-4 rounded-md shadow-md">
             <h1 class="text-5xl font-extrabold fincapital-blue-dark-text mb-2">Fincapital</h1>
             <p class="text-xl text-gray-700">Créditos Semanales en Matehuala</p>
         </header>
 
-        <!-- Sección de Propósito -->
+        <!-- Sección de Propósito/Introducción al servicio -->
         <section class="text-center bg-blue-50 p-6 rounded-lg shadow-inner flex flex-col items-center">
-            <img src="https://placehold.co/100x100/1DA87C/FFFFFF?text=Negocio" alt="Negocio en crecimiento" class="mx-auto mb-4 rounded-full shadow-md">
+            <!-- Icono representativo del negocio en crecimiento -->
+            <img src="https://placehold.co/100x100/1DA87C/FFFFFF?text=🛍️" alt="Icono de una bolsa de compras, representando un negocio" class="mx-auto mb-4 rounded-full shadow-md">
             <h2 class="text-3xl font-bold fincapital-blue-dark-text mb-3">¡Impulsa tu negocio con nuestros créditos!</h2>
             <p class="text-gray-700 leading-relaxed">En Fincapital, te ofrecemos soluciones financieras flexibles diseñadas para dueños de negocios con local fijo en Matehuala. Nuestro objetivo es que tu negocio siga creciendo sin complicaciones. Simula tu crédito y descubre lo fácil que es obtener el apoyo que necesitas.</p>
         </section>
 
-        <!-- Requisitos Generales - Amigables y con imágenes -->
+        <!-- Sección de Requisitos Generales, presentados de forma amigable con iconos/imágenes -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold fincapital-teal-text mb-4 text-center">¡Obtén tu crédito en minutos con Fincapital!</h2>
             <p class="text-gray-700 mb-8 text-center">Una vez que envíes tu solicitud por WhatsApp, te damos respuesta en ¡solo 15 minutos! Aquí te contamos lo que necesitamos para agilizar tu proceso:</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-gray-700">
 
-                <!-- Requisito 1: Tu Negocio -->
+                <!-- Requisito 1: Tu Negocio y Domicilio -->
                 <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-green">
-                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=🛍️" alt="Icono de Tienda" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=🏪" alt="Icono de una tienda o negocio" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
                     <h3 class="text-xl font-semibold mb-2 fincapital-green-text">Tu Negocio y Domicilio</h3>
                     <ul class="list-none space-y-1 text-sm">
                         <li>✅ Ser dueño de un negocio con local físico (¡como abarrotes, comida, ferreterías, etc.!).</li>
@@ -558,9 +602,9 @@
                     </ul>
                 </div>
 
-                <!-- Requisito 2: Tu Identificación -->
+                <!-- Requisito 2: Tu Identificación y Documentos -->
                 <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-teal">
-                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=🆔" alt="Icono de Identificación" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=🆔" alt="Icono de una identificación" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
                     <h3 class="text-xl font-semibold mb-2 fincapital-teal-text">Tu Identificación y Documentos</h3>
                     <ul class="list-none space-y-1 text-sm">
                         <li>✅ Presentar tu INE (original y copia).</li>
@@ -571,10 +615,10 @@
 
                 <!-- Requisito 3: Tu Aval y Coordinación -->
                 <div class="flex flex-col items-center text-center p-4 bg-white rounded-lg shadow-sm border-b-4 border-fincapital-yellow">
-                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=🤝" alt="Icono de Aval" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
+                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=🤝" alt="Icono de dos manos dándose un apretón" class="w-20 h-20 mb-4 rounded-full bg-blue-100 p-2">
                     <h3 class="text-xl font-semibold mb-2 fincapital-yellow-text">Tu Aval y Coordinación</h3>
-                    <!-- Nueva imagen añadida aquí -->
-                    <img src="https://placehold.co/120x80/F8B600/FFFFFF?text=🤝+🤝" alt="Apretón de manos" class="w-30 h-20 mb-4 rounded-md shadow-sm">
+                    <!-- Nueva imagen añadida para reforzar el concepto de aval -->
+                    <img src="https://placehold.co/120x80/F8B600/FFFFFF?text=🤝%20🤝" alt="Dos personas dándose la mano, simbolizando un aval" class="w-30 h-20 mb-4 rounded-md shadow-sm">
                     <ul class="list-none space-y-1 text-sm">
                         <li>✅ Un aval con su INE (original y copia).</li>
                         <li>✅ Tu aval no debe ser familiar directo ni vivir contigo o en el mismo negocio.</li>
@@ -585,13 +629,13 @@
             </div>
         </section>
 
-        <!-- Tipos de Crédito por Plazo -->
+        <!-- Sección de Tipos de Crédito por Plazo, con detalles claros -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold fincapital-teal-text mb-4">Descubre Nuestros Créditos Semanales</h2>
+            <h2 class="text-2xl font-semibold fincapital-teal-text mb-4 text-center">Descubre Nuestros Créditos Semanales</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Crédito 8 Semanas -->
                 <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-green flex flex-col items-center text-center">
-                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=8" alt="Crédito a 8 semanas" class="mx-auto mb-3 rounded-full">
+                    <img src="https://placehold.co/80x80/1DA87C/FFFFFF?text=8%20S" alt="Número 8 y una 'S' de semanas" class="mx-auto mb-3 rounded-full">
                     <h3 class="text-xl font-bold fincapital-green-text mb-2">Crédito a 8 Semanas</h3>
                     <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
                     <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
@@ -600,16 +644,16 @@
                 </div>
                 <!-- Crédito 10 Semanas -->
                 <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-teal flex flex-col items-center text-center">
-                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=10" alt="Crédito a 10 semanas" class="mx-auto mb-3 rounded-full">
+                    <img src="https://placehold.co/80x80/33B8CE/FFFFFF?text=10%20S" alt="Número 10 y una 'S' de semanas" class="mx-auto mb-3 rounded-full">
                     <h3 class="text-xl font-bold fincapital-teal-text mb-2">Crédito a 10 Semanas</h3>
                     <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
                     <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
-                    <p class="text-700 mb-3"><strong>Tu Pago por cada $1,000:</strong> $150</p>
+                    <p class="text-gray-700 mb-3"><strong>Tu Pago por cada $1,000:</strong> $150</p>
                     <p class="text-gray-600 text-sm">La opción perfecta para un equilibrio entre plazo y comodidad de pago.</p>
                 </div>
                 <!-- Crédito 12 Semanas -->
                 <div class="bg-white p-5 rounded-lg shadow-lg border-t-4 border-fincapital-yellow flex flex-col items-center text-center">
-                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=12" alt="Crédito a 12 semanas" class="mx-auto mb-3 rounded-full">
+                    <img src="https://placehold.co/80x80/F8B600/FFFFFF?text=12%20S" alt="Número 12 y una 'S' de semanas" class="mx-auto mb-3 rounded-full">
                     <h3 class="text-xl font-bold fincapital-yellow-text mb-2">Crédito a 12 Semanas</h3>
                     <p class="text-gray-700 mb-3"><strong>Monto:</strong> $5,000 a $10,000</p>
                     <p class="text-gray-700 mb-3"><strong>Para:</strong> Todos los negocios con local fijo. Hasta $10,000 solo para abarrotes y comida.</p>
@@ -619,13 +663,14 @@
             </div>
         </section>
 
-        <!-- Simulador de Créditos -->
+        <!-- Simulador de Créditos para calcular pagos semanales -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4">Simulador de Crédito Semanal</h2>
+            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4 text-center">Simulador de Crédito Semanal</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="montoCredito" class="block text-gray-700 font-medium mb-2">Monto del Crédito:</label>
                     <select id="montoCredito" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <!-- Opciones de monto -->
                         <option value="5000">$5,000</option>
                         <option value="6000">$6,000</option>
                         <option value="7000">$7,000</option>
@@ -637,25 +682,27 @@
                 <div>
                     <label for="plazoSemanas" class="block text-gray-700 font-medium mb-2">Plazo (Semanas):</label>
                     <select id="plazoSemanas" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <!-- Opciones de plazo -->
                         <option value="8">8 Semanas</option>
                         <option value="10">10 Semanas</option>
                         <option value="12">12 Semanas</option>
                     </select>
                 </div>
             </div>
+            <!-- Resultados del simulador, con estilo destacado -->
             <div class="mt-6 p-4 bg-blue-100 rounded-md text-blue-800 font-semibold text-lg text-center border border-fincapital-teal">
                 <p id="pagoSemanalResultado">Pago Semanal Aproximado: $0.00</p>
                 <p id="descuentoSaldo" class="text-sm mt-1 text-blue-700">Descuento por Protección de Saldo (al desembolsar): $0.00</p>
             </div>
         </section>
 
-        <!-- Mensajes del sistema -->
-        <div id="message-box" class="hidden p-3 rounded-md mb-4 text-white text-center"></div>
+        <!-- Contenedor para mensajes del sistema (éxito/error), inicialmente oculto -->
+        <div id="message-box" class="hidden p-3 rounded-md mb-4 text-white text-center opacity-0"></div>
 
-        <!-- Formulario de Contacto -->
+        <!-- Formulario de Contacto para enviar solicitud por WhatsApp -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4">¡Te Contactamos para tu Crédito!</h2>
-            <p class="text-gray-700 mb-4">Déjanos tus datos y al hacer clic en "Enviar Solicitud" se abrirá una conversación de WhatsApp con nuestros asesores, listos para ayudarte a impulsar tu negocio.</p>
+            <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4 text-center">¡Te Contactamos para tu Crédito!</h2>
+            <p class="text-gray-700 mb-4 text-center">Déjanos tus datos y al hacer clic en "Enviar Solicitud" se abrirá una conversación de WhatsApp con nuestros asesores, listos para ayudarte a impulsar tu negocio.</p>
             <form id="contactoForm" class="space-y-4">
                 <div>
                     <label for="nombreContacto" class="block text-gray-700 font-medium mb-2">Nombre Completo:</label>
@@ -663,11 +710,12 @@
                 </div>
                 <div>
                     <label for="telefonoContacto" class="block text-gray-700 font-medium mb-2">Teléfono:</label>
-                    <input type="tel" id="telefonoContacto" placeholder="Ej. 8123456789 (10 dígitos)" pattern="[0-9]{10}" title="Por favor, ingresa un número de teléfono de 10 dígitos." required class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <!-- Patrón para asegurar 10 dígitos numéricos para teléfonos de México -->
+                    <input type="tel" id="telefonoContacto" placeholder="Ej. 8123456789 (10 dígitos)" pattern="[0-9]{10}" title="Por favor, ingresa un número de teléfono de 10 dígitos sin espacios ni guiones." required class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                 </div>
                 <div>
                     <label for="tipoNegocio" class="block text-gray-700 font-medium mb-2">Tipo de Negocio:</label>
-                    <select id="tipoNegocio" class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <select id="tipoNegocio" required class="focus:ring-fincapital-teal focus:border-fincapital-teal block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                         <option value="">Selecciona tu tipo de negocio</option>
                         <option value="abarrotes">Tienda de Abarrotes</option>
                         <option value="comida">Negocio de Comida</option>
@@ -676,6 +724,8 @@
                     </select>
                 </div>
                 <button type="submit" class="w-full btn-primary hover:bg-fincapital-green-dark text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
+                    <!-- Icono SVG para indicar la acción de WhatsApp -->
+                    <svg class="inline-block w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.637-3.8-1.639-5.912C.006 6.079 6.138 0 13.594 0c3.673 0 7.159 1.448 9.794 4.083 2.639 2.632 4.087 6.113 4.089 9.789 0 7.502-6.132 13.636-13.596 13.636-2.056 0-4.041-.575-5.834-1.606L.057 24zm6.593-4.819l-.49-.283c-1.096.643-2.392.999-3.753.999-4.731 0-8.618-3.921-8.622-8.653 0-4.743 3.882-8.622 8.656-8.622 4.71 0 8.613 3.861 8.616 8.577.002 2.37-.932 4.605-2.61 6.223l-.337.336-3.696.96-.282.072c-.11.028-.223.041-.334.041-.21 0-.419-.038-.616-.118zm7.393-2.529c.14-.078.293-.117.433-.117s.293.039.433.117c.14.078.257.19.349.317.091.132.183.292.275.466.091.173.137.348.137.521s-.046.348-.137.521c-.092.174-.184.334-.275.466-.092.127-.209.239-.349.317s-.293.117-.433.117-.293-.039-.433-.117c-.14-.078-.257-.19-.349-.317-.091-.132-.183-.292-.275-.466-.091-.173-.137-.348-.137-.521s.046-.348.137-.521c.092-.174.184-.334.275-.466.092-.127.209-.239.349-.317zm-4.789-2.529c.14-.078.293-.117.433-.117s.293.039.433.117c.14.078.257.19.349.317.091.132.183.292.275.466.091.173.137.348.137.521s-.046.348-.137.521c-.092.174-.184.334-.275.466-.092.127-.209.239-.349.317s-.293.117-.433.117-.293-.039-.433-.117c-.14-.078-.257-.19-.349-.317-.091-.132-.183-.292-.275-.466-.091-.173-.137-.348-.137-.521s.046-.348.137-.521c.092-.174.184-.334.275-.466.092-.127.209-.239.349-.317zM7.005 9.076c.14-.078.293-.117.433-.117s.293.039.433.117c.14.078.257.19.349.317.091.132.183.292.275.466.091.173.137.348.137.521s-.046.348-.137.521c-.092.174-.184.334-.275.466-.092.127-.209.239-.349.317s-.293.117-.433.117-.293-.039-.433-.117c-.14-.078-.257-.19-.349-.317-.091-.132-.183-.292-.275-.466-.091-.173-.137-.348-.137-.521s.046-.348.137-.521c.092-.174.184-.334.275-.466.092-.127.209-.239.349-.317z"/></svg>
                     Enviar Solicitud por WhatsApp
                 </button>
             </form>
@@ -686,20 +736,25 @@
             <h2 class="text-2xl font-semibold fincapital-blue-dark-text mb-4 text-center">Asesor Virtual ✨</h2>
             <p class="text-gray-700 mb-4 text-center">Pregunta a nuestro asistente inteligente sobre los créditos, requisitos o cualquier duda que tengas.</p>
             <div class="chat-container mb-4" id="chatOutput">
-                <!-- El historial del chat se mostrará aquí -->
-                <div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm"><strong>Asesor Virtual:</strong> ¡Hola! ¿En qué puedo ayudarte hoy sobre tu crédito en Fincapital?</div>
+                <!-- Mensaje de bienvenida del Asesor Virtual -->
+                <div class="bg-gray-100 p-3 rounded-lg self-start max-w-[80%] my-2 shadow-sm animate-fade-in"><strong>Asesor Virtual:</strong> ¡Hola! ¿En qué puedo ayudarte hoy sobre tu crédito en Fincapital?</div>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="userQuestion" placeholder="Escribe tu pregunta aquí..." class="flex-grow focus:ring-fincapital-teal focus:border-fincapital-teal">
                 <button id="askButton" class="btn-primary flex-shrink-0 flex items-center justify-center">
+                    <!-- Icono SVG de un rayo, simbolizando "Preguntar" o "Activar" -->
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     Preguntar ✨
                 </button>
             </div>
-            <div id="loadingIndicator" class="mt-4 text-center text-gray-600 hidden">Cargando respuesta...</div>
+            <!-- Indicador de carga para el asistente virtual -->
+            <div id="loadingIndicator" class="mt-4 text-center text-gray-600 hidden">
+                <div class="animate-spin inline-block w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                Cargando respuesta...
+            </div>
         </section>
 
-        <!-- Pie de página -->
+        <!-- Pie de página con información de derechos de autor -->
         <footer class="text-center text-gray-600 mt-8">
             <p>&copy; 2024 Fincapital. Creciendo juntos con negocios de verdad.</p>
         </footer>
